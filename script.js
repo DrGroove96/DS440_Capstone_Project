@@ -3,6 +3,35 @@ const OPENWEATHER_API_KEY = '879ea4a729df8bf05abea4e7e6f7c708';
 const DEEPSEEK_API_KEY = 'sk-3794fb74c0614f68b21a6d919d98d9d8';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
+// Firebase configuration
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getDatabase, ref, set } from "firebase/database";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBdHyJMIVTDrrIgJLz8DkUl9hlSHr3_i5I",
+  authDomain: "ds440-capstone.firebaseapp.com",
+  projectId: "ds440-capstone",
+  storageBucket: "ds440-capstone.firebasestorage.app",
+  messagingSenderId: "409978442047",
+  appId: "1:409978442047:web:b0fbec040e5816aa40c38a",
+  measurementId: "G-B5GSZYWXGV",
+  databaseURL: "https://ds440-capstone-default-rtdb.firebaseio.com/"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const database = getDatabase(app);
+
+
+
 // Global variables
 let map;
 let currentLocation = {
@@ -268,6 +297,18 @@ function updateTemperatureChart() {
     }
 }
 
+
+// Write temperature feedback to Firebase database
+function writeUserTemp(temp, timeDate, lat, lon) {
+    const db = getDatabase();
+    set(ref(db, 'users/'), {
+      temperature: temp,
+      time: timeDate,
+      latitude : lat,
+      longitude: lon
+    });
+  };
+
 // Temperature feedback submission
 function submitTemperatureFeedback() {
     const userTemp = parseFloat(document.getElementById('userTemperature').value);
@@ -278,6 +319,7 @@ function submitTemperatureFeedback() {
         timestamp: new Date(),
         temperature: userTemp
     });
+    writeUserTemp(userTemp, new Date(), currentLocation.lat, currentLocation.lon);
 
     // Refresh both hourly and daily charts
     updateForecastData(currentLocation.lat, currentLocation.lon);
